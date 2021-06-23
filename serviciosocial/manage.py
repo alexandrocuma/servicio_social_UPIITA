@@ -2,9 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from firebase.settings import init_firebase
+from firebase.main import get_data_from, insert_data_to
 
 
 def main():
+    init_firebase()
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'serviciosocial.settings')
     try:
