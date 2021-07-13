@@ -44,9 +44,11 @@ def path_exists(path="Servicio/"):
 
 def get_required_data(model):
     if model == 'Products':
-        return Product.objects.values()
+        products = Product.objects.values()
+        return ProductSerializer(products, many=True).data
     elif model == 'Categories':
-        return Category.objects.values()
+        categories = Category.objects.all()
+        return CategorySerializer(categories, many=True).data
     else:
         return []
 
