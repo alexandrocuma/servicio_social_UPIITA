@@ -27,6 +27,8 @@ def snippet_detail(request, model):
         body = json.loads(request.body)
         data = get_required_data(model)
         if len(data) > 0:
+            if(body['truncate']):
+                db.reference(path).delete()
             process_data(data, path, body['node'])
             return JsonResponse({'message': 'info uploaded succesfully'}, status=200)
         return JsonResponse({'error': 'no data to process'}, status=404)
