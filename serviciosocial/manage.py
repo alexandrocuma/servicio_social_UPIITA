@@ -3,7 +3,6 @@
 import os
 import sys
 from firebase.settings import init_firebase
-from firebase.main import get_data_from, insert_data_to
 
 
 def main():

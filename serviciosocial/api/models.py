@@ -16,6 +16,3 @@ class Product(models.Model):
     price = models.IntegerField()
     category = models.ForeignKey(
         Category, related_name='products', on_delete=models.CASCADE, blank=True, null=True)
-
-    def __str__(self):
-        return '%d: %s' % (self.id, self.name)

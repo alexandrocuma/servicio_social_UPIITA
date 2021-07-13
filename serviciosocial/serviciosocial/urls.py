@@ -26,4 +26,5 @@ router.register(r'product', ProductViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('firebase/', include('firebase.urls')),
 ]
