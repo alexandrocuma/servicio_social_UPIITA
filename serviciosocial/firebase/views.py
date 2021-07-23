@@ -14,7 +14,7 @@ def snippet_list(request):
         return JsonResponse({'test': 'test'}, safe=False)
 
     elif request.method == 'POST':
-        return JsonResponse({'error': "Erro"}, status=400)
+        return JsonResponse({'error': "Error"}, status=400)
 
 
 @csrf_exempt
@@ -29,7 +29,10 @@ def snippet_detail(request, model):
         if len(data) > 0:
             if(body['truncate']):
                 db.reference(path).delete()
-            process_data(data, path, body['node'])
+            try:
+                process_data(data, path, body['node'], body['fields'])
+            except:
+                process_data(data, path, body['node'])
             return JsonResponse({'message': 'info uploaded succesfully'}, status=200)
         return JsonResponse({'error': 'no data to process'}, status=404)
 
@@ -53,8 +56,12 @@ def get_required_data(model):
         return []
 
 
-def process_data(data, path, node):
+def process_data(data, path, node, fields=None):
     for object in data:
         key = str(object.get(node))
         del object[node]
-        insert_data_to(object, path, key)
+        if fields:
+            object = {key: object[key] for key in object.keys() & fields}
+            insert_data_to(object, path, key)
+        else:
+            insert_data_to(object, path, key)
