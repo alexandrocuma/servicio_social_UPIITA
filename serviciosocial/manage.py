@@ -6,7 +6,7 @@ from firebase.settings import init_firebase
 
 
 def main():
-    init_firebase()
+    # init_firebase()
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'serviciosocial.settings')
     try:

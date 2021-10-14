@@ -6,9 +6,11 @@
 - python manage.py runserver
 
 # Adding new models for DB 
-- python manage.py makemigrations snippets
+- python manage.py makemigrations api
 - python manage.py migrate
 
-# Admin 
+# Create and Login Admin 
+- python manage.py createsuperuser
+
   user - servicio
   password - Servicio

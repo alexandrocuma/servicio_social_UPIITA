@@ -2,8 +2,9 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 
-from api.serializers import CategorySerializer, ProductSerializer
-from api.models import Category, Product
+from api.serializers import CategorySerializer, ProductSerializer, QuerySerializer
+from api.models import Category, Product, Query
+from firebase.settings import init_firebase
 from firebase_admin import db
 import json
 
@@ -26,15 +27,34 @@ def snippet_detail(request, model):
     elif request.method == 'POST':
         body = json.loads(request.body)
         data = get_required_data(model)
-        if len(data) > 0:
-            if(body['truncate']):
-                db.reference(path).delete()
-            try:
-                process_data(data, path, body['node'], body['fields'])
-            except:
-                process_data(data, path, body['node'])
-            return JsonResponse({'message': 'info uploaded succesfully'}, status=200)
-        return JsonResponse({'error': 'no data to process'}, status=404)
+        return process_query(data, body, path)
+
+
+@csrf_exempt
+def query_loader(request, id):
+    if request.method == 'GET':
+        object = Query.objects.get(pk=id)
+        query = QuerySerializer(object).data
+        init_firebase(query["url"])
+        path = "Servicio/"+query["table"]
+        if not path_exists(path):
+            return HttpResponse({'error': 'path not exist'}, status=404)
+        data = get_required_data(query["table"])
+        return process_query(data, query, path)
+    return JsonResponse({'msg': 'Method not allowed'}, status=400)
+
+
+@csrf_exempt
+def table_loader(request):
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        init_firebase()
+        data = db.reference("Servicio/"+body["node"].capitalize()).get()
+        for object in data.items():
+            object[1][body["key"]] = object[0]
+            load_data_to(object[1], body["node"].capitalize())
+        return JsonResponse({'msg': 'Method Allowed'}, status=200)
+    return JsonResponse({'msg': 'Method not allowed'}, status=400)
 
 
 def insert_data_to(value, path="Servicio/", key="test"):
@@ -65,3 +85,33 @@ def process_data(data, path, node, fields=None):
             insert_data_to(object, path, key)
         else:
             insert_data_to(object, path, key)
+
+
+def process_query(data, query, path):
+    if len(data) > 0:
+        if(query['truncate']):
+            db.reference(path).delete()
+        try:
+            process_data(data, path, query['node'], query['fields'])
+        except:
+            process_data(data, path, query['node'])
+        return JsonResponse({'message': 'info uploaded succesfully'}, status=200)
+    return JsonResponse({'error': 'no data to process'}, status=404)
+
+
+def load_data_to(object, model):
+    del object["id"]
+    if model == 'Products':
+        p = Product()
+        for key, value in object.items():
+            setattr(p, key, value)
+        p.save()
+    elif model == 'Categories':
+        if object["products"] is not None:
+            del object["products"]
+        cat = Category()
+        for key, value in object.items():
+            setattr(cat, key, value)
+        cat.save()
+    else:
+        return []
